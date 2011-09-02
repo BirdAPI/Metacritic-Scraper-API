@@ -66,7 +66,7 @@ class Metacritic:
                 try:
                     res.release_date = datetime.strptime(res.release_date_text, '%B %d, %Y')
                 except:
-                    res.release_date = None
+                    res.release_date = None 
                     
             res.esrb = get_li_span_data(result, "maturity_rating")
             
