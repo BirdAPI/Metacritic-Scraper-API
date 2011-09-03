@@ -7,6 +7,8 @@ import sys
 import re
 import os
 
+TYPES = [ 'all', 'movie', 'album', 'tv', 'person', 'video', 'company' ]
+
 class SearchResult:
     def __init__(self):
         self.id = None
@@ -34,8 +36,8 @@ class SearchResult:
 class Metacritic:
 
     @staticmethod
-    def search(query):
-        url = get_search_url(query)
+    def search(query, type="all"):
+        url = get_search_url(query, type)
         html = get_html(url)
         if not html:
             return None
@@ -102,8 +104,8 @@ def get_li_span_data(node, data_name):
             return data.text.strip()
     return None
     
-def get_search_url(query):
-    return "http://www.metacritic.com/search/all/%s/results?sort=relevancy" % query.replace(" ", "+")
+def get_search_url(query, type="all"):
+    return "http://www.metacritic.com/search/%s/%s/results?sort=relevancy" % (type, query.replace(" ", "+"))
 
 def get_html(url):
     try:
@@ -119,6 +121,10 @@ def main():
     print "__main__"
     if len(sys.argv) == 2:
         results = Metacritic.search(sys.argv[1])
+        for result in results:
+            print result, "\n"
+    elif len(sys.argv) == 3:
+        results = Metacritic.search(sys.argv[1], sys.argv[2])
         for result in results:
             print result, "\n"
 
