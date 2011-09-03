@@ -24,7 +24,13 @@ class SearchResult:
         self.summary = None
         self.user_score = None
         self.runtime = None
+ 
+    #FIND: self.([^ ]+) = None
+    #REPLACE: self.\1, 
+    def __repr__(self):
+        return repr([ self.id, self.title, self.type, self.link, self.platform, self.metascore, self.release_date_text, self.release_date, self.esrb, self.publisher, self.index, self.page, self.summary, self.user_score, self.runtime ])
 
+        
 class Metacritic:
 
     @staticmethod
@@ -37,27 +43,27 @@ class Metacritic:
         i = 0
         page = 0
         allresults = []
-        results = soup.findAll("li", attrs={"class":"result"})
+        results = soup.findAll("li", "result")
         for result in results:
             res = SearchResult()
-            result_type = result.find("div", attrs={"class":"result_type"})
+            result_type = result.find("div", "result_type")
             if result_type:
                 strong = result_type.find("strong")
                 if strong:    
                     res.type = strong.text.strip()
-                span = result.find("span", attrs={"class":"platform"})
+                span = result.find("span", "platform")
                 if span:    
                     res.platform = span.text.strip()
                     
-            product_title = result.find("h3", attrs={"class":"product_title"})
+            product_title = result.find("h3", "product_title")
             if product_title:
                 a = product_title.find("a")
                 if a:
                     res.link = "www.metacritic.com" + a["href"]
-                    res.id = a["href"].replace("/", "_")
+                    res.id = a["href"][1:].replace("/", "_")
                     res.title = a.text.strip()
             
-            metascore = result.find("span", attrs={"class":"metascore"})
+            metascore = result.find("span", "metascore")
             if metascore:
                 res.metascore = metascore.text.strip()
             
@@ -72,7 +78,7 @@ class Metacritic:
             
             res.publisher = get_li_span_data(result, "publisher")
             
-            deck = result.find("p", attrs={"class":"deck"})
+            deck = result.find("p", "deck")
             if deck:
                 res.summary = deck.text.strip()
             
@@ -89,9 +95,9 @@ class Metacritic:
                 
                
 def get_li_span_data(node, data_name):
-    li = node.find("li", attrs={"class":data_name})
+    li = node.find("li", data_name)
     if li:
-        data = li.find("span", attrs={"class":"data"})
+        data = li.find("span", "data")
         if data:
             return data.text.strip()
     return None
@@ -114,7 +120,7 @@ def main():
     if len(sys.argv) == 2:
         results = Metacritic.search(sys.argv[1])
         for result in results:
-            print result
+            print result, "\n"
 
 if __name__ == "__main__":
     main()
