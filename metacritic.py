@@ -7,7 +7,7 @@ import sys
 import re
 import os
 
-TYPES = [ 'all', 'movie', 'album', 'tv', 'person', 'video', 'company' ]
+TYPES = [ 'all', 'movie', 'game', 'album', 'tv', 'person', 'video', 'company' ]
 
 class ProductDetails:
     def __init__(self):
