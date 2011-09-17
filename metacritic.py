@@ -2,21 +2,23 @@
 
 from datetime import datetime
 from BeautifulSoup import BeautifulSoup
+from pprint import pprint
 import urllib2
+import sqlite3
 import sys
 import re
 import os
 
 TYPES = [ 'all', 'movie', 'album', 'tv', 'person', 'video', 'company' ]
 
-class ProductDetails:
+class MetacriticInfo:
     def __init__(self):
         self.id = None
         self.title = None
         self.type = None
         self.link = None
         self.boxart = None
-        self.platform = None
+        self.system = None
         self.publisher = None
         self.publisher_link = None
         self.release_date_text = None
@@ -28,7 +30,7 @@ class ProductDetails:
         self.user_count = None
         self.user_score_desc = None
         self.summary = None
-        self.rating = None
+        self.esrb = None
         self.official_site = None
         self.developer = None
         self.genres = None
@@ -40,44 +42,13 @@ class ProductDetails:
         self.num_online = None
         self.customization = None
 
-    def __repr__(self):
-        return repr([ self.id, \
-            self.title, \
-            self.type, \
-            self.link, \
-            self.boxart, \
-            self.platform, \
-            self.publisher, \
-            self.publisher_link, \
-            self.release_date_text, \
-            self.release_date, \
-            self.metascore, \
-            self.metascore_count, \
-            self.metascore_desc, \
-            self.user_score, \
-            self.user_count, \
-            self.user_score_desc, \
-            self.summary, \
-            self.rating, \
-            self.official_site, \
-            self.developer, \
-            self.genres, \
-            self.num_players, \
-            self.esrb_reason, \
-            self.sound, \
-            self.connectivity, \
-            self.resolution, \
-            self.num_online, \
-            self.customization ])
-    
-        
 class SearchResult:
     def __init__(self):
         self.id = None
         self.title = None
         self.type = None
         self.link = None
-        self.platform = None
+        self.system = None
         self.metascore = None
         self.release_date_text = None
         self.release_date = None
@@ -88,12 +59,6 @@ class SearchResult:
         self.summary = None
         self.user_score = None
         self.runtime = None
- 
-    #FIND: self.([^ ]+) = None
-    #REPLACE: self.\1, 
-    def __repr__(self):
-        return repr([ self.id, self.title, self.type, self.link, self.platform, self.metascore, self.release_date_text, self.release_date, self.esrb, self.publisher, self.index, self.page, self.summary, self.user_score, self.runtime ])
-
         
 class Metacritic:
 
@@ -117,13 +82,13 @@ class Metacritic:
                     res.type = strong.text.strip()
                 span = result.find("span", "platform")
                 if span:    
-                    res.platform = span.text.strip()
+                    res.system = span.text.strip()
                     
             product_title = result.find("h3", "product_title")
             if product_title:
                 a = product_title.find("a")
                 if a:
-                    res.link = "www.metacritic.com" + a["href"]
+                    res.link = "http://www.metacritic.com" + a["href"]
                     res.id = a["href"][1:].replace("/", "_")
                     res.title = a.text.strip()
             
@@ -157,13 +122,13 @@ class Metacritic:
         return allresults
 
     @staticmethod
-    def get_details(id):
+    def get_info(id):
         url = get_details_url(id)
         html = get_html(url)
         if not html:
             return None
         soup = BeautifulSoup(html)
-        prod = ProductDetails()
+        prod = MetacriticInfo()
         prod.id = id
         
         og_type = soup.find("meta", attrs={"name":"og:type"})
@@ -178,21 +143,21 @@ class Metacritic:
         if product_title:
             a = product_title.find("a")
             if a:
-                prod.link = "www.metacritic.com" + a["href"]
+                prod.link = "http://www.metacritic.com" + a["href"]
                 prod.title = a.text.strip()
         
         platform = soup.find("span", "platform")
         if platform:
             a = platform.find("a")
             if a:
-                prod.platform = a.text.strip()
+                prod.system = a.text.strip()
         
         publisher = soup.find("li", "publisher")
         if publisher:
             a = publisher.find("a")
             if a:
                 prod.publisher = a.text.strip()
-                prod.publisher_link = "www.metacritic.com" + a["href"]
+                prod.publisher_link = "http://www.metacritic.com" + a["href"]
         
         prod.release_date_text = get_li_span_data(soup, "release_data")
         if prod.release_date_text:
@@ -254,7 +219,7 @@ def process_tr(prod, tr):
     td_val = td.text.strip()
     
     if th_val == "Rating":
-        prod.rating = td_val
+        prod.esrb = td_val
     elif th_val == "Official Site":
         prod.official_site = td_val
     elif th_val == "Developer":
@@ -285,7 +250,7 @@ def get_li_span_data(node, data_name):
     return None
     
 def get_search_url(query, type="all"):
-    return "http://www.metacritic.com/search/%s/%s/results?sort=relevancy" % (type, query.replace(" ", "+"))
+    return "http://www.metacritic.com/search/%s/%s/results?sort=relevancy" % (type, query.replace(":", "").replace("-", "").replace("_", "").replace(" ", "+"))
 
 def get_details_url(id):
     return "http://www.metacritic.com/%s/details" % id.replace("_", "/")
@@ -304,14 +269,15 @@ def main():
     print "__main__"
     if len(sys.argv) == 2:
         results = Metacritic.search(sys.argv[1])
-        for result in results:
-            print result, "\n"
-            print Metacritic.get_details(result.id), "\n"
     elif len(sys.argv) == 3:
         results = Metacritic.search(sys.argv[1], sys.argv[2])
-        for result in results:
-            print result, "\n"
-            print Metacritic.get_details(result.id), "\n"
+    else:
+        return
+    for result in results:
+        pprint(vars(result))
+        print ""
+        pprint(vars(Metacritic.get_info(result.id)))
+        print ""
 
 if __name__ == "__main__":
     main()
