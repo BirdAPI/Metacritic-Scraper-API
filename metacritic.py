@@ -21,7 +21,6 @@ class MetacriticInfo:
         self.system = None
         self.publisher = None
         self.publisher_link = None
-        self.release_date_text = None
         self.release_date = None
         self.metascore = None
         self.metascore_count = None
@@ -50,7 +49,6 @@ class SearchResult:
         self.link = None
         self.system = None
         self.metascore = None
-        self.release_date_text = None
         self.release_date = None
         self.esrb = None
         self.publisher = None
@@ -96,12 +94,7 @@ class Metacritic:
             if metascore:
                 res.metascore = metascore.text.strip()
             
-            res.release_date_text = get_li_span_data(result, "release_date")
-            if res.release_date_text:
-                try:
-                    res.release_date = datetime.strptime(res.release_date_text, '%b %d, %Y')
-                except:
-                    res.release_date = None 
+            res.release_date = get_li_span_data(result, "release_date")
                     
             res.esrb = get_li_span_data(result, "maturity_rating")
             
@@ -159,12 +152,7 @@ class Metacritic:
                 prod.publisher = a.text.strip()
                 prod.publisher_link = "http://www.metacritic.com" + a["href"]
         
-        prod.release_date_text = get_li_span_data(soup, "release_data")
-        if prod.release_date_text:
-            try:
-                prod.release_date = datetime.strptime(prod.release_date_text, '%b %d, %Y')
-            except:
-                prod.release_date = None        
+        prod.release_date = get_li_span_data(soup, "release_data")      
         
         metascore = soup.find("div", "feature_metascore")
         if metascore:
@@ -266,7 +254,6 @@ def get_html(url):
         return None 
     
 def main():
-    print "__main__"
     if len(sys.argv) == 2:
         results = Metacritic.search(sys.argv[1])
     elif len(sys.argv) == 3:
